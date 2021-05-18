@@ -1,6 +1,5 @@
 """Example of rsync user usage."""
 import logging
-import tempfile
 
 from locust_plugins import run_single_user
 from locust import task
@@ -14,13 +13,12 @@ from locust_rsync import RsyncUser
 class ExampleRsyncUser(RsyncUser):
     """Example rsync user for [self.host]."""
 
-    host = "rpki.ripe.net"
-    temp_dir = tempfile.TemporaryDirectory(prefix="locust-plugin-rsync")
+    host = "rpki2.ripe.net"
 
     @task
     def get_ta_cert(self):
         """Retrieve trust anchor certificate."""
-        self.client.get("ta/RIPE-NCC-TA-TEST.cer")
+        self.client.get("ta/ripe-ncc-ta.cer")
 
     @task
     def get_repo(self):

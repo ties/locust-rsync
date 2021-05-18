@@ -6,6 +6,7 @@ Enables load testing of rsync servers using locust.
 import time
 import logging
 import tempfile
+
 from pathlib import Path
 from typing import List, Optional
 
@@ -48,6 +49,7 @@ class RsyncClient:
         Filename (and module) are only passed when calling
         `client.call_rsync([path])`.
         """
+        LOG.info("RsyncClient(%s, %s)", host, temp_dir)
         self._request_event = request_event
         self.temp_dir = Path(temp_dir).resolve()
         self.host = host
@@ -103,6 +105,7 @@ class RsyncClient:
         try:
             request_meta["response"] = self.__call_rsync(name)
         except Exception as e:
+            LOG.error(e)
             request_meta["exception"] = e
         request_meta["response_time"] = (time.perf_counter() - start_time) * 1000
         self._request_event.fire(**request_meta)
@@ -110,8 +113,6 @@ class RsyncClient:
 
 class RsyncUser(User):
     """A minimal Locust user class that provides an XmlRpcClient to its subclasses."""
-
-    temp_dir: tempfile.TemporaryDirectory
 
     abstract = True  # dont instantiate this as an actual user when running Locust
 
@@ -128,6 +129,8 @@ class RsyncUser(User):
         assert not self.host.endswith(
             "/"
         ), "host should contain the hostname and not end with /"
+
+        temp_dir = tempfile.TemporaryDirectory(prefix="locust-plugin-rsync")
         self.client = RsyncClient(
-            self.temp_dir.name, self.host, request_event=environment.events.request
+            temp_dir.name, self.host, request_event=environment.events.request
         )
